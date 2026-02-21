@@ -1,4 +1,25 @@
-# پروژه Reflex -
+# پروژه Reflex - Hananeh Moballeghtohid
+## شماره دانشجویی
+400108911-حنانه مبلغ توحید
+401100444-علی عبدلی مسینان
+400109232-آرمان کشازر
+
+## توضیحات پیاده‌سازی
+
+این پروژه شامل پیاده‌سازی کامل پروتکل Reflex در Xray-Core است:
+
+- Step 1: ساختار اولیه و ثبت پروتکل
+- Step 2: پیاده‌سازی Handshake ضمنی و احراز هویت با UUID
+- Step 3: پیاده‌سازی Frame Structure و رمزنگاری ChaCha20-Poly1305
+- Step 4: پیاده‌سازی Fallback به وب‌سرور و تشخیص با Peek
+- Step 5: پیاده‌سازی Traffic Morphing پایه و کنترل Timing
+
+## نحوه اجرا
+
+```bash
+cd xray-core
+go build -o xray ./main
+go test ./proxy/reflex/... -v
 
 ## چیه این پروژه؟
 
