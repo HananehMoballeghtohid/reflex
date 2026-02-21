@@ -242,10 +242,13 @@ build_json="$([ "$BUILD_OK" = "true" ] && echo "true" || echo "false")"
 test_json="$([ "$TEST_PASS" = "true" ] && echo "true" || echo "false")"
 lint_json="$([ "$LINT_PASS" = "true" ] && echo "true" || echo "false")"
 grading_mode="$([ "$USE_TEST_BASED" = true ] && echo "test-based" || echo "fallback")"
+# Escape studentId for JSON (backslash and double-quote)
+student_id_json="${STUDENT_ID//\\/\\\\}"
+student_id_json="${student_id_json//\"/\\\"}"
 
 cat << EOF
 {
-  "studentId": "$STUDENT_ID",
+  "studentId": "$student_id_json",
   "step1": $step1,
   "step2": $step2,
   "step3": $step3,
