@@ -5,8 +5,6 @@ import (
 	"io"
 )
 
-// preloadedConn باعث می‌شه Read از روی bufio.Reader انجام بشه
-// یعنی بایت‌هایی که Peek کردیم هم هنوز قابل خواندن هستن.
 type preloadedConn struct {
 	Reader *bufio.Reader
 	Conn   io.ReadWriteCloser

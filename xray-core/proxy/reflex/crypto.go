@@ -6,29 +6,32 @@ import (
 	"io"
 
 	"golang.org/x/crypto/curve25519"
-	"golang.org/x/crypto/hkdf"
 )
-
-func DeriveSharedKey(privateKey, peerPublicKey [32]byte) [32]byte {
-	var shared [32]byte
-	curve25519.ScalarMult(&shared, &privateKey, &peerPublicKey)
-	return shared
-}
-
-func DeriveSessionKey(sharedKey [32]byte, salt []byte) []byte {
-	h := hkdf.New(sha256.New, sharedKey[:], salt, []byte("reflex-session"))
-	sessionKey := make([]byte, 32)
-	_, _ = h.Read(sessionKey)
-	return sessionKey
-}
 
 func GenerateKeyPair() (privateKey [32]byte, publicKey [32]byte) {
 	_, _ = io.ReadFull(rand.Reader, privateKey[:])
-
-	privateKey[0] &= 248
-	privateKey[31] &= 127
-	privateKey[31] |= 64
-
-	curve25519.ScalarBaseMult(&publicKey, &privateKey)
+	pub, err := curve25519.X25519(privateKey[:], curve25519.Basepoint)
+	if err != nil {
+		panic(err)
+	}
+	copy(publicKey[:], pub)
 	return
+}
+
+func DeriveSharedKey(privateKey [32]byte, peerPublicKey [32]byte) [32]byte {
+	shared, err := curve25519.X25519(privateKey[:], peerPublicKey[:])
+	if err != nil {
+		return [32]byte{}
+	}
+	var out [32]byte
+	copy(out[:], shared)
+	return out
+}
+
+func DeriveSessionKey(sharedKey [32]byte, info []byte) []byte {
+	h := sha256.New()
+	h.Write(sharedKey[:])
+	h.Write(info)
+	sum := h.Sum(nil)
+	return sum
 }

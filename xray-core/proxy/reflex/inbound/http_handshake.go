@@ -23,9 +23,13 @@ type httpBody struct {
 func (h *Handler) handleReflexHTTP(reader *bufio.Reader, conn net.Conn, dispatcher routing.Dispatcher, ctx context.Context) error {
 	hs, err := readHTTPPostHandshake(reader)
 	if err != nil {
+		body := `{"error":"bad handshake"}`
+		resp := "HTTP/1.1 400 Bad Request\r\nContent-Type: application/json\r\nContent-Length: " +
+			strconv.Itoa(len(body)) + "\r\n\r\n" + body
+		_, _ = conn.Write([]byte(resp))
 		return errors.New("reflex: bad http-post handshake").Base(err).AtWarning()
 	}
-	return h.processHandshake(reader, conn, dispatcher, ctx, hs)
+	return h.processHandshake(ctx, reader, conn, dispatcher, hs)
 }
 
 func readHTTPPostHandshake(r *bufio.Reader) (reflex.ClientHandshake, error) {
