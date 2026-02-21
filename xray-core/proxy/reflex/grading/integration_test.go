@@ -35,6 +35,11 @@ import (
 // that the handler can still complete handshake without a real outbound.
 type mockDispatcher struct{}
 
+func (m *mockDispatcher) Start() error { return nil }
+func (m *mockDispatcher) Close() error { return nil }
+
+
+
 func (m *mockDispatcher) Type() interface{} { return (*routing.Dispatcher)(nil) }
 func (m *mockDispatcher) Dispatch(ctx context.Context, dest net.Destination) (*transport.Link, error) {
 	return nil, fmt.Errorf("mock: no outbound")

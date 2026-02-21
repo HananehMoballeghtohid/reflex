@@ -2,7 +2,7 @@ package inbound
 
 import (
 	"bufio"
-	"bytes"
+	"encoding/binary"
 	"context"
 	"encoding/base64"
 	"encoding/json"
@@ -11,16 +11,16 @@ import (
 	"strings"
 
 	"github.com/xtls/xray-core/common/errors"
-	"github.com/xtls/xray-core/common/net"
 	"github.com/xtls/xray-core/features/routing"
 	"github.com/xtls/xray-core/proxy/reflex"
+	"github.com/xtls/xray-core/transport/internet/stat"
 )
 
 type httpBody struct {
 	Data string `json:"data"`
 }
 
-func (h *Handler) handleReflexHTTP(reader *bufio.Reader, conn net.Conn, dispatcher routing.Dispatcher, ctx context.Context) error {
+func (h *Handler) handleReflexHTTP(reader *bufio.Reader, conn stat.Connection, dispatcher routing.Dispatcher, ctx context.Context) error {
 	hs, err := readHTTPPostHandshake(reader)
 	if err != nil {
 		body := `{"error":"bad handshake"}`
@@ -97,6 +97,35 @@ func readHTTPPostHandshake(r *bufio.Reader) (reflex.ClientHandshake, error) {
 		return hs, err
 	}
 
-	// 6) decode raw handshake bytes using the same reader-based decoder
-	return readClientHandshake(bufio.NewReader(bytes.NewReader(raw)))
-}
+	// 6) parse raw handshake bytes (HTTP format: PK | UID | TS | Nonce | PolicyReq)
+	if len(raw) < 32+16+8+16 {
+		return hs, errors.New("handshake too short")
+	}
+
+	offset := 0
+
+	// PublicKey (32)
+	copy(hs.PublicKey[:], raw[offset:offset+32])
+	offset += 32
+
+	// UserID (16)
+	copy(hs.UserID[:], raw[offset:offset+16])
+	offset += 16
+
+	// Timestamp (8)
+	ts := binary.BigEndian.Uint64(raw[offset : offset+8])
+	hs.Timestamp = int64(ts)
+	offset += 8
+
+	// Nonce (16)
+	copy(hs.Nonce[:], raw[offset:offset+16])
+	offset += 16
+
+	// PolicyReq (rest)
+	if offset < len(raw) {
+		hs.PolicyReq = make([]byte, len(raw)-offset)
+		copy(hs.PolicyReq, raw[offset:])
+	}
+
+	return hs, nil
+}	

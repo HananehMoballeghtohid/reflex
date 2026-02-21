@@ -5,7 +5,6 @@ import (
 	"context"
 
 	"github.com/xtls/xray-core/common"
-	"github.com/xtls/xray-core/proxy"
 	"github.com/xtls/xray-core/proxy/reflex"
 	"github.com/xtls/xray-core/transport"
 	"github.com/xtls/xray-core/transport/internet"
@@ -29,7 +28,7 @@ func (h *Handler) Process(ctx context.Context, link *transport.Link, d internet.
 }
 
 // New creates a new Reflex outbound handler.
-func New(ctx context.Context, config *reflex.OutboundConfig) (proxy.OutboundHandler, error) {
+func New(ctx context.Context, config *reflex.OutboundConfig) (*Handler, error) {
 	_ = ctx
 	_ = config
 	return &Handler{}, nil
